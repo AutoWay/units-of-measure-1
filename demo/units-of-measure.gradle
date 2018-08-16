@@ -21,4 +21,5 @@ generateUnitsOfMeasure {
     ].toSet()
 }
 sourceSets.main.kotlin.srcDir generateUnitsOfMeasure.generatedSrcDir
+sourceSets.main.java.srcDir generateUnitsOfMeasure.generatedSrcDir
 compileKotlin.dependsOn(generateUnitsOfMeasure)

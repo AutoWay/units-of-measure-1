@@ -17,6 +17,12 @@ fun writeBase(printWriter: PrintWriter) = ::UnitsOfMeasurePlugin::class.java
         .lineSequence()
         .forEach(printWriter::println)
 
+fun writeKt26012WorkAround(printWriter: PrintWriter) = ::UnitsOfMeasurePlugin::class.java
+        .getResourceAsStream("/info/kunalsheth/units/generated/QuanFBV.java")
+        .bufferedReader()
+        .lineSequence()
+        .forEach(printWriter::println)
+
 private const val nothing = "Nothing"
 private const val siValue = "siValue"
 private val time = Dimension(T = 1)
@@ -38,18 +44,22 @@ fun Dimension.src(relations: Set<Relation>, quantities: Set<Quantity>, units: Se
     return """
 typealias $this = $safeName
 ${if (siUnit != null) "typealias $siUnit = $safeName" else ""}
-data class $safeName(override val $siValue: Double) : Quantity<$this, $integral, $derivative> {
-    override val abrev = "$abbreviation"
-    override fun new($siValue: Double) = copy($siValue)
+data class $safeName(/*override*/ private val $siValue: Double) : Quantity<$this, $integral, $derivative> {
+    // override val abrev = "$abbreviation"
+    // override fun new($siValue: Double) = copy($siValue)
     override fun equals(other: Any?) = eq(other)
     override fun hashCode() = ($siValue to abrev).hashCode()
     override fun toString() = "$$siValue $${if (siUnit != null) "unitName" else "abrev"}"
 
-    override operator fun div(that: Quan<$time>) = ${
+    override /*operator*/ fun /*div*/fbvDiv(that: Quan<$time>) = ${
     if (derivative != nothing) "$derivative(this.$siValue / that.$siValue)" else "TODO()"}
 
-    override operator fun times(that: Quan<$time>) = ${
+    override /*operator*/ fun /*times*/fbvTimes(that: Quan<$time>) = ${
     if (integral != nothing) "$integral(this.$siValue * that.$siValue)" else "TODO()"}
+
+    override fun fbvSiValue() = siValue
+    override fun fbvAbrev() = "$abbreviation"
+    override fun fbvNew(siValue: Double) = copy($siValue)
 
     ${if (siUnit != null) """
     companion object : UomConverter<$this>,

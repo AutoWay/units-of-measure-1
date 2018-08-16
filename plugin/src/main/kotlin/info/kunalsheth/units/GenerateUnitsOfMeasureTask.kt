@@ -24,6 +24,11 @@ open class GenerateUnitsOfMeasureTask @Inject constructor(p: Project) : DefaultT
         val srcWriter = generatedSrc.printWriter()
         writeBase(srcWriter)
 
+        kt26012WorkAroundSrc.parentFile.mkdirs()
+        val kt26012WorkAroundWriter = kt26012WorkAroundSrc.printWriter()
+        writeKt26012WorkAround(kt26012WorkAroundWriter)
+        kt26012WorkAroundWriter.close()
+
         val allDimensions = (relationships.flatMap { listOf(it.a, it.b, it.result) } +
                 quantities.map(Quantity::dimension) +
                 unitsOfMeasure.map(UnitOfMeasure::dimension) +
@@ -67,6 +72,9 @@ open class GenerateUnitsOfMeasureTask @Inject constructor(p: Project) : DefaultT
 
     @OutputFile
     val generatedSrc = File(generatedSrcDir, "UnitsOfMeasure.kt")
+
+    @OutputFile
+    val kt26012WorkAroundSrc = File(generatedSrcDir, "info/kunalsheth/units/generated/QuanFBV.java")
 
 
     // for Groovy to Kotlin interop

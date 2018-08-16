@@ -1,55 +1,46 @@
 package info.kunalsheth.units.generated
 
-import kotlin.math.abs
 import kotlin.math.sign
-import kotlin.jvm.JvmName
+import kotlin.math.abs
 
 /**
  * Created by kunal on 8/6/17.
  */
-typealias Quan<Q> = Quantity<Q, *, *>
+typealias Quan<Q> = QuanFBV<Q, *, *>
+typealias Quantity<Q, I, D> = QuanFBV<Q, I, D>
 
-@Suppress("FINITE_BOUNDS_VIOLATION", "UNCHECKED_CAST")
-interface Quantity<This, Integral, Derivative> : Comparable<Quan<This>> where
-This : Quantity<This, Integral, Derivative>,
-Integral : Quantity<Integral, *, This>,
-Derivative : Quantity<Derivative, This, *> {
-    val siValue: Double
-    val abrev: String
+val <Q : Quan<Q>> Quan<Q>.siValue get() = fbvSiValue()
+val <Q : Quan<Q>> Quan<Q>.abrev get() = fbvAbrev()
+fun <Q : Quan<Q>> Quan<Q>.new(siValue: Double) = fbvNew(siValue)
 
-    fun new(siValue: Double): This
+operator fun <Q : Quan<Q>> Q.unaryPlus() = this
+operator fun <Q : Quan<Q>> Q.unaryMinus() = new(-siValue)
 
-    operator fun unaryPlus(): This = this as This
-    operator fun unaryMinus(): This = new(-siValue)
+operator fun <Q : Quan<Q>> Quan<Q>.plus(that: Quan<Q>) = new(this.siValue + that.siValue)
+operator fun <Q : Quan<Q>> Quan<Q>.minus(that: Quan<Q>) = new(this.siValue - that.siValue)
+operator fun <Q : Quan<Q>> Quan<Q>.times(that: Number) = new(this.siValue * that.toDouble())
+operator fun <Q : Quan<Q>> Quan<Q>.div(that: Number) = new(this.siValue / that.toDouble())
+operator fun <Q : Quan<Q>> Quan<Q>.rem(that: Quan<Q>) = new(this.siValue % that.siValue)
 
-    operator fun plus(that: Quan<This>): This = new(this.siValue + that.siValue)
-    operator fun minus(that: Quan<This>): This = new(this.siValue - that.siValue)
-    operator fun times(that: Number): This = new(this.siValue * that.toDouble())
-    operator fun div(that: Number): This = new(this.siValue / that.toDouble())
-    operator fun rem(that: Quan<This>): This = new(this.siValue % that.siValue)
+operator fun <Q : Quantity<Q, IQ, *>, IQ> Q.times(that: Quan<T>) = fbvTimes(that)
+operator fun <Q : Quantity<Q, *, DQ>, DQ> Q.div(that: Quan<T>) = fbvDiv(that)
 
-    operator fun times(that: Quan<T>): Integral = TODO()
-    operator fun div(that: Quan<T>): Derivative = TODO()
-
-    @Suppress("UNCHECKED_CAST")
-    operator fun rangeTo(that: Quan<This>) = object : ClosedRange<This> {
-        override val start = (this@Quantity min that)
-        override val endInclusive = (this@Quantity max that)
-    }
-
-    infix fun min(that: Quan<This>): This = (if (this < that) this else that) as This
-    infix fun max(that: Quan<This>): This = (if (this > that) this else that) as This
-
-    val abs: This get() = new(abs(siValue))
-    val signum get() = siValue.sign
-    val isNegative: Boolean get() = siValue < 0
-    val isPositive: Boolean get() = siValue > 0
-
-    override fun compareTo(other: Quan<This>) = this.siValue.compareTo(other.siValue)
+@Suppress("UNCHECKED_CAST")
+operator fun <Q : Quan<Q>> Quan<Q>.rangeTo(that: Quan<Q>) = object : ClosedRange<Q> {
+    override val start = (this@rangeTo min that)
+    override val endInclusive = (this@rangeTo max that)
 }
 
+infix fun <Q : Quan<Q>> Quan<Q>.min(that: Quan<Q>): Q = (if (this < that) this else that) as Q
+infix fun <Q : Quan<Q>> Quan<Q>.max(that: Quan<Q>): Q = (if (this > that) this else that) as Q
+
+val <Q : Quan<Q>> Quan<Q>.abs get() = new(abs(siValue))
+val <Q : Quan<Q>> Quan<Q>.signum get() = siValue.sign
+val <Q : Quan<Q>> Quan<Q>.isNegative: Boolean get() = siValue < 0
+val <Q : Quan<Q>> Quan<Q>.isPositive: Boolean get() = siValue > 0
+
 private inline fun <reified Q : Quan<Q>> Q.eq(that: Any?) = when (that) {
-    is Q -> this.siValue == that.siValue
+    is Q -> this.fbvSiValue() == that.fbvSiValue()
     else -> false
 }
 
